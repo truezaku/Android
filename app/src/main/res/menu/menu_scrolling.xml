@@ -1,0 +1,30 @@
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    tools:context="com.example.myapplication.ScrollingActivity">
+    <item
+        android:id="@+id/action_fav"
+        android:icon="@drawable/favorite_black"
+        app:showAsAction="always" />
+    <item
+        android:id="@+id/sort_AtoZ"
+        android:title="A-Z"
+        app:showAsAction="always" />
+    <item
+        android:id="@+id/sort_ZtoA"
+        android:title="Z-A"
+        app:showAsAction="always" />
+    <item
+        android:id="@+id/sort_cost"
+        android:title="Cost↑↓"
+        app:showAsAction="always" />
+    <item
+        android:id="@+id/sort_date"
+        android:title="Date↑↓"
+        app:showAsAction="ifRoom" />
+    <item
+        android:id="@+id/action_settings"
+        android:orderInCategory="100"
+        android:title="@string/action_settings"
+        app:showAsAction="never" />
+</menu>
