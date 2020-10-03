@@ -8,10 +8,7 @@ import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.Button;
-import android.widget.EditText;
 import android.widget.TextView;
-
-import org.w3c.dom.Text;
 
 public class LoginActivity extends AppCompatActivity {
 
@@ -69,10 +66,10 @@ public class LoginActivity extends AppCompatActivity {
                     nameView.setText("This ID has already been used.");
                 }
                 else {
-                    editor.putString("account", stringEditUserName).commit();
+                    editor.putString("account", stringEditUserName);
                     editor.apply();
 
-                    TextView textView = findViewById(R.id.textView);
+                    TextView textView = findViewById(R.id.messageLoginText);
                     nameView.setText("Hello " + stringEditUserName);
                     textView.setText("Please click the back button if it doesn't go back automatically.");
                     username = stringEditUserName;

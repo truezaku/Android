@@ -3,6 +3,7 @@ package com.example.myapplication;
 import android.app.Dialog;
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.text.Editable;
 import android.text.TextWatcher;
@@ -10,6 +11,7 @@ import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.ViewGroup;
 import android.view.Window;
 import android.widget.Button;
 import android.widget.EditText;
@@ -27,9 +29,12 @@ import androidx.appcompat.widget.Toolbar;
 import com.google.android.material.appbar.CollapsingToolbarLayout;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.Date;
 
 public class ScrollingActivity extends AppCompatActivity {
 
@@ -82,6 +87,7 @@ public class ScrollingActivity extends AppCompatActivity {
         public LinearLayout m_view;
         public int selected_id;
         public int flag;
+        public int key_id;
 
         public CustomDialogClass(@NonNull Context context) {
             super(context);
@@ -99,6 +105,19 @@ public class ScrollingActivity extends AppCompatActivity {
             Arrays.fill(purchasedIdZtoA, false);
 
              */
+
+            if (getIntent().hasExtra("USER_NAME")){
+                username = getIntent().getStringExtra("USER_NAME");
+                //TextView yourId = findViewById(R.id.yourId);
+                //yourId.setText("Hello " + username);
+            }
+            else {
+                //TextView yourId = findViewById(R.id.yourId);
+                username = "GUEST";
+            }
+
+            SharedPreferences preferences = getSharedPreferences(username, Context.MODE_PRIVATE);
+            final SharedPreferences.Editor editor = preferences.edit();
 
             Button yes = this.findViewById(R.id.purchaseButton);
             yes.setOnClickListener(new View.OnClickListener() {
@@ -129,7 +148,20 @@ public class ScrollingActivity extends AppCompatActivity {
                         dismiss();
                     }
                     else {
+                        // Now you managed to buy it
                         m_view.removeViewAt(selected_id);
+                        // save your transaction in the preference
+                        String purchaseDetail;
+                        String key;
+                        key = "history" + key_id;
+                        final DateFormat df = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
+                        final Date date = new Date(System.currentTimeMillis());
+                        String dateString = df.format(date);
+                        purchaseDetail = dateString + "\n Item: " + data[m_id].name + ", Cost: $" + data[m_id].cost;
+                        editor.putString(key,purchaseDetail).commit();
+                        editor.apply();
+                        key_id++;
+
                         dismiss();
                     }
                 }
@@ -168,6 +200,99 @@ public class ScrollingActivity extends AppCompatActivity {
         customDialog.SetDetails(id);
     }
 
+    class HistoryDialogClass extends Dialog {
+
+        private Button backButton;
+        float dp = getResources().getDisplayMetrics().density;
+        int textWidth = (int)(250 * dp);
+        int margins = (int)(5 * dp);
+        String key;
+        //
+        // if you add another item, you need to add it to this array too.
+        //
+        TextView[] histView = new TextView[16];
+
+        public HistoryDialogClass(@NonNull Context context) {
+            super(context);
+        }
+
+        @Override
+        protected void onCreate(Bundle savedInstanceState) {
+            requestWindowFeature(Window.FEATURE_NO_TITLE);
+            super.onCreate(savedInstanceState);
+
+            if (getIntent().hasExtra("USER_NAME")){
+                username = getIntent().getStringExtra("USER_NAME");
+            }
+            else {
+                username = "GUEST";
+            }
+        }
+
+        public void ShowHistory() {
+            if (getIntent().hasExtra("USER_NAME")){
+                username = getIntent().getStringExtra("USER_NAME");
+            }
+            else {
+                username = "GUEST";
+            }
+
+            SharedPreferences preferences = getSharedPreferences(username, Context.MODE_PRIVATE);
+
+            LinearLayout layout = new LinearLayout(ScrollingActivity.this);
+            layout.setOrientation(LinearLayout.VERTICAL);
+
+            layout.setLayoutParams(new LinearLayout.LayoutParams(
+                    LinearLayout.LayoutParams.MATCH_PARENT,
+                    LinearLayout.LayoutParams.MATCH_PARENT));
+            setContentView(layout);
+
+            backButton = new Button(ScrollingActivity.this);
+            backButton.setText("Close");
+            backButton.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View view) {
+                    // this code below is for TransactionActivity which I don't use anymore
+                    //Intent intent = new Intent(TransactionActivity.this, ScrollingActivity.class);
+                    //startActivity(intent);
+                    dismiss();
+                }
+            });
+            layout.addView(backButton,
+                    new LinearLayout.LayoutParams(
+                            LinearLayout.LayoutParams.WRAP_CONTENT,
+                            LinearLayout.LayoutParams.WRAP_CONTENT));
+
+            for (int i = 0; i < 16; i++) {
+                key = "history" + i;
+                histView[i] = new TextView(ScrollingActivity.this);
+                histView[i].setTag(String.valueOf(i));
+                String historyString = preferences.getString(key, null);
+                if (historyString == null) {
+                    break;
+                } else {
+                    histView[i].setText(historyString);
+
+                    LinearLayout.LayoutParams textLayoutParams =
+                            new LinearLayout.LayoutParams(textWidth,
+                                    ViewGroup.LayoutParams.WRAP_CONTENT);
+                    textLayoutParams.setMargins(margins, margins, margins, margins);
+
+                    histView[i].setLayoutParams(textLayoutParams);
+                    layout.addView(histView[i]);
+                }
+            }
+        }
+    }
+
+    public HistoryDialogClass historyDialog = null;
+
+    public void HistoryClicked() {
+        historyDialog.show();
+        historyDialog.ShowHistory();
+    }
+
+    // need to add the checker if it is purchased or not
     private void InitShopItems() {
         LayoutInflater inflater = LayoutInflater.from(this);
         LinearLayout layout = findViewById(R.id.layoutScrollView);
@@ -338,6 +463,7 @@ public class ScrollingActivity extends AppCompatActivity {
         loginButton.setText("LOGIN");
 
         username = null;
+        getIntent().removeExtra("USER_NAME");
 
         TextView yourId = findViewById(R.id.yourId);
         yourId.setText("Hello Guest");
@@ -354,7 +480,6 @@ public class ScrollingActivity extends AppCompatActivity {
         layout.removeAllViews();
         purchasedId = new boolean[16];
         InitShopItems();
-
     }
     private String username;
 
@@ -459,6 +584,8 @@ public class ScrollingActivity extends AppCompatActivity {
         customDialog = new CustomDialogClass(this);
         InitShopItems();
 
+        historyDialog = new HistoryDialogClass(this);
+
         final Button loginButton = findViewById(R.id.userLoginButton);
         if (username != null) {
             loginButton.setText("LOGOUT");
@@ -527,6 +654,12 @@ public class ScrollingActivity extends AppCompatActivity {
             case R.id.sort_date:
                 sortcnt_dt++;
                 SortByDate();
+                return true;
+
+            case R.id.menu_history:
+                HistoryClicked();
+                //Intent intent = new Intent(ScrollingActivity.this, TransactionActivity.class);
+                //startActivity(intent);
                 return true;
 
             default:
